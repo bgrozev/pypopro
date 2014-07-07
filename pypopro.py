@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import json
-import time
+import sys, os, json, time
 
 def main():
     if (len(sys.argv) < 2):
@@ -15,6 +12,9 @@ def main():
     inputDir = sys.argv[1]
     if inputDir[-1] != '/':
         inputDir += '/'
+    if not os.path.isdir(inputDir):
+        print('Input directory {} does not exists (or is not a directory)'.format(inputDir))
+        return
     outputDir = sys.argv[2]
     if outputDir[-1] != '/':
         outputDir += '/'
@@ -27,7 +27,7 @@ def main():
     print("Configuration: ", config)
     print()
 
-    debug = str2bool(config.get('debug'))
+    debug = parseBool(config.get('debug'))
 
     #read metadata
     events = json.load(open(inputDir + config['metadataFilename']))
@@ -107,12 +107,11 @@ def preprocessVideoEvents(events):
     ended = [];
     for event in events:
         if event['type'] == 'RECORDING_STARTED':
-            e = {}
-            e['filename'] = event['filename']
-            e['mediaType'] = 'video',
-            e['type'] = 'RECORDING_ENDED'
-            e['ssrc'] = event['ssrc']
-            e['instant'] = event['instant'] + getDuration(inputDir + e['filename'])
+            e = dict(filename = event['filename'],
+                     mediaType = 'video',
+                     type = 'RECORDING_ENDED',
+                     ssrc = event['ssrc'],
+                     instant = event['instant'] + getDuration(inputDir + event['filename']))
             ended.append(e)
     
     #TODO: can I pass a function without explicit definition?
@@ -150,7 +149,7 @@ def addTiming(s):
                                                              s))
     lastTime = cur
 
-def str2bool(v):
+def parseBool(v):
   if v is None:
       return False
   return str(v).lower() in ("yes", "true", "t", "1")
