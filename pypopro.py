@@ -18,7 +18,7 @@ def main():
     outputDir = sys.argv[2]
     if outputDir[-1] != '/':
         outputDir += '/'
-    #todo: create outputDir if not exists
+    os.makedirs(outputDir, mode=0o755, exist_ok=True)
     print("inputDir={}\noutputDir={}".format(inputDir, outputDir))
 
     #load configuration
@@ -36,6 +36,8 @@ def main():
 
     doVideo(events.get('video'))
     addTiming('Video complete')
+
+    #merge audio and video
 
     print()
     for s in timingStrings:
@@ -110,7 +112,7 @@ def preprocessVideoEvents(events):
             e['mediaType'] = 'video',
             e['type'] = 'RECORDING_ENDED'
             e['ssrc'] = event['ssrc']
-            e['instant'] = event['instant'] + getDuration(e['filename'])
+            e['instant'] = event['instant'] + getDuration(inputDir + e['filename'])
             ended.append(e)
     
     #TODO: can I pass a function without explicit definition?
