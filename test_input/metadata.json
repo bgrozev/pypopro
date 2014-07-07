@@ -1,0 +1,26 @@
+{
+  "audio" : [
+    {"ssrc":2473760775,"filename":"2473760775.mp3","type":"RECORDING_STARTED","instant":1401807483964,"mediaType":"audio"},
+    {"ssrc":2452647913,"filename":"2452647913.mp3","type":"RECORDING_STARTED","instant":1401807484421,"mediaType":"audio"},
+    {"ssrc":1107392327,"filename":"1107392327.mp3","type":"RECORDING_STARTED","instant":1401807501709,"mediaType":"audio"},
+    {"ssrc":1565260729,"filename":"1565260729.mp3","type":"RECORDING_STARTED","instant":1401807524062,"mediaType":"audio"},
+    {"ssrc":1107392327,"filename":"1107392327-1.mp3","type":"RECORDING_STARTED","instant":1401807527409,"mediaType":"audio"},
+    {"ssrc":2452647913,"filename":"2452647913-1.mp3","type":"RECORDING_STARTED","instant":1401807532821,"mediaType":"audio"}
+  ],
+
+  "video" : [
+    {"ssrc":2612617218,"filename":"2612617218.webm","aspectRatio":"16_9","type":"RECORDING_STARTED","instant":1401807484011,"mediaType":"video"},
+    {"ssrc":9413050,"filename":"9413050.webm","aspectRatio":"16_9","type":"RECORDING_STARTED","instant":1401807484013,"mediaType":"video"},
+    {"ssrc":2612617218,"audioSsrc":2473760775,"type":"SPEAKER_CHANGED","instant":1401807484038,"mediaType":"video"},
+    {"ssrc":9413050,"audioSsrc":2452647913,"type":"SPEAKER_CHANGED","instant":1401807485275,"mediaType":"video"},
+    {"ssrc":1190123626,"filename":"1190123626.webm","aspectRatio":"16_9","type":"RECORDING_STARTED","instant":1401807500796,"mediaType":"video"},
+    {"ssrc":2612617218,"audioSsrc":2473760775,"type":"SPEAKER_CHANGED","instant":1401807503515,"mediaType":"video"},
+    {"ssrc":2612617218,"filename":"2612617218.webm","type":"RECORDING_ENDED","instant":1401807509187,"mediaType":"video"},
+    {"ssrc":9413050,"audioSsrc":2452647913,"type":"SPEAKER_CHANGED","instant":1401807512310,"mediaType":"video"},
+    {"ssrc":3879530045,"filename":"3879530045.webm","aspectRatio":"16_9","type":"RECORDING_STARTED","instant":1401807522745,"mediaType":"video"},
+    {"ssrc":3879530045,"audioSsrc":1565260729,"type":"SPEAKER_CHANGED","instant":1401807524818,"mediaType":"video"},
+    {"ssrc":1190123626,"filename":"1190123626.webm","type":"RECORDING_ENDED","instant":1401807534861,"mediaType":"video"},
+    {"ssrc":9413050,"audioSsrc":2452647913,"type":"SPEAKER_CHANGED","instant":1401807536296,"mediaType":"video"},
+    {"ssrc":3879530045,"audioSsrc":1565260729,"type":"SPEAKER_CHANGED","instant":1401807541869,"mediaType":"video"}
+  ]
+}
