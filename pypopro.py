@@ -31,6 +31,7 @@ def main():
 
     #read metadata
     events = json.load(open(inputDir + config['metadataFilename']))
+
     doAudio(events.get('audio'))
     addTiming('Audio complete')
 
@@ -114,10 +115,7 @@ def preprocessVideoEvents(events):
                      instant = event['instant'] + getDuration(inputDir + event['filename']))
             ended.append(e)
     
-    #TODO: can I pass a function without explicit definition?
-    def event_key(event):
-        return event['instant']
-    sorted(events, key=event_key)
+    events.sort(key = lambda x: x['instant'])
 
     return normalizeInstants(events)
 
@@ -127,9 +125,10 @@ def normalizeInstants(events):
         e['instant'] -= firstInstant
     return events
 
-#Get duration of filename in milliseconds.
-#TODO: figure out what's a good way to document stuff
 def getDuration(filename):
+    """
+        Get duration of the webm file 'filename' in milliseconds.
+    """
     proc = os.popen('mkvinfo -s -v ' + filename + " | tail -n 1 | awk '{print $6;}'")
     return int(proc.read())
 
