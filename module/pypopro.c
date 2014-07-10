@@ -93,11 +93,7 @@ py_pypopro_encoder_close(PyObject *self, PyObject *args)
 static PyObject*
 py_pypopro_overlayer_init(PyObject *self, PyObject *args)
 {
-    const char *filename;
-    if (!PyArg_ParseTuple(args, "s", &filename))
-        return NULL;
-
-    PypoproOverlayer *overlayer = pypopro_overlayer_init(filename);
+    PypoproOverlayer *overlayer = pypopro_overlayer_init();
 
     return Py_BuildValue("l", (intptr_t) overlayer);
 }
@@ -182,9 +178,9 @@ PypoproMethods[] = {
     {"decoder_init",  py_pypopro_decoder_init, METH_VARARGS, "Initialize a decoder."},
     {"decoder_read",  py_pypopro_decoder_read, METH_VARARGS, "Read a frame at a given PTS."},
     {"decoder_close",  py_pypopro_decoder_close, METH_VARARGS, "Close a decoder."},
-    {"endoder_init",  py_pypopro_encoder_init, METH_VARARGS, "Initialize an encoder."},
-    {"endoder_add_frame",  py_pypopro_encoder_add_frame, METH_VARARGS, "Add a frame to an encoder."},
-    {"endoder_close",  py_pypopro_encoder_close, METH_VARARGS, "Close an encoder."},
+    {"encoder_init",  py_pypopro_encoder_init, METH_VARARGS, "Initialize an encoder."},
+    {"encoder_add_frame",  py_pypopro_encoder_add_frame, METH_VARARGS, "Add a frame to an encoder."},
+    {"encoder_close",  py_pypopro_encoder_close, METH_VARARGS, "Close an encoder."},
     {"overlayer_init",  py_pypopro_overlayer_init, METH_VARARGS, "Initialize an overlayer."},
     {"overlayer_overlay",  py_pypopro_overlayer_overlay, METH_VARARGS, "Overlay frames with given dimensions and positions."},
     {"overlayer_close",  py_pypopro_overlayer_close, METH_VARARGS, "Close an overlayer."},

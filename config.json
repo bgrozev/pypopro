@@ -2,6 +2,7 @@
     "outputWidth" : 1280,
     "outputHeight" : 720,
     "outputFramerate" : 25,
+    "outputFilename" : "out.webm",
     "metadataFilename" : "metadata.json",
     "debug" : "true"
 }

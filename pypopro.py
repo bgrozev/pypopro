@@ -5,6 +5,9 @@ import os
 import json
 import time
 
+import pypopro
+import Participants
+
 
 def main():
     if len(sys.argv) < 2:
@@ -74,11 +77,14 @@ def do_video(events):
 
     last_instant = events[-1]['instant']
     index = -1
-    #TODO: refactor participants in its own class
-    participants = set()
-    active = -1
+
+    participants = Participants.Participants(config, input_dir)
+
+    overlayer = pypopro.overlayer_init()
+    encoder = pypopro.encoder_init(output_dir + config['outputFilename'])
+
     for ms in range(0, last_instant, config['frameDuration']):
-        #read events in (0, ms]
+        #read events in (0, ms] and update participants
         added = False
         while events[index + 1]['instant'] <= ms:
             event = events[index + 1]
@@ -86,24 +92,24 @@ def do_video(events):
                 print('Event {} at {} handled at ms={}'.format(event['type'],
                                                                event['instant'],
                                                                ms))
-            event_type = event['type']
-            if event_type == 'RECORDING_STARTED':
-                participants.add(event['ssrc'])
-                if active == -1:
-                    active = event['ssrc']
-            elif event_type == 'RECORDING_ENDED':
-                participants.remove(event['ssrc'])
-                if active == event['ssrc']:
-                    active = next(iter(participants)) if participants else -1
-            elif event_type == 'SPEAKER_CHANGED':
-                active = event['ssrc']
+            participants.add_event(event)
 
             index += 1
             added = True
 
-        if debug and added:
-            print('ms={} participants={} active={}'.format(ms, participants,
-                                                           active))
+        #        if debug and added:
+        #            print('ms={} participants={} active={}'.format(ms, participants,
+        #                                                           active))
+
+        #read frames for all participants and overlay them
+        frame = pypopro.overlayer_overlay(overlayer,
+                                          *participants.get_frames(ms))
+
+        #encode the frame and write it to disk
+        pypopro.encoder_add_frame(encoder, frame)
+
+    pypopro.encoder_close(encoder)
+    pypopro.overlayer_close(overlayer)
 
 
 def preprocess_video_events(events):
