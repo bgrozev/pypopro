@@ -2,7 +2,7 @@
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "ivf.h"
-#include "pypopro.h"
+#include "pypopro-constants.h"
 
 PypoproEncoder *pypopro_encoder_init(const char *filename)
 {

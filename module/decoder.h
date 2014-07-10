@@ -1,3 +1,6 @@
+#ifndef _JIPOPRO_DECODER_H_
+#define _JIPOPRO_DECODER_H_
+
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
@@ -20,3 +23,5 @@ typedef struct PypoproDecoder PypoproDecoder;
 PypoproDecoder *pypopro_decoder_init(const char *filename);
 AVFrame *pypopro_decoder_read(PypoproDecoder* decoder, int64_t pts);
 void pypopro_decoder_close(PypoproDecoder *decoder);
+
+#endif

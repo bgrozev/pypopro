@@ -1,3 +1,6 @@
+#ifndef _JIPOPRO_ENCODER_H_
+#define _JIPOPRO_ENCODER_H_
+
 #include "libavcodec/avcodec.h"
 
 struct PypoproEncoder
@@ -15,3 +18,5 @@ typedef struct PypoproEncoder PypoproEncoder;
 PypoproEncoder *pypopro_encoder_init(const char *filename);
 void pypopro_encoder_add_frame(PypoproEncoder *encoder, AVFrame *frame, int64_t pts);
 void pypopro_encoder_close(PypoproEncoder *encoder);
+
+#endif

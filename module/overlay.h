@@ -1,3 +1,6 @@
+#ifndef _JIPOPRO_OVERLAY_H
+#define _JIPOPRO_OVERLAY_H
+
 #include "libavcodec/avcodec.h"
 #include "libswscale/swscale.h"
 
@@ -24,3 +27,5 @@ AVFrame *pypopro_overlayer_overlay(PypoproOverlayer *overlayer,
                                int posX[],
                                int posY[],
                                int n);
+
+#endif

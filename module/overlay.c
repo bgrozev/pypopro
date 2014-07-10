@@ -1,6 +1,6 @@
 #include "libavcodec/avcodec.h"
 #include "overlay.h"
-#include "pypopro.h"
+#include "pypopro-constants.h"
 
 PypoproOverlayer *pypopro_overlayer_init()
 {

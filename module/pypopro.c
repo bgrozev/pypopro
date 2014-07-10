@@ -1,10 +1,10 @@
-#include "pypopromodule.h"
+#include "pypopro.h"
 #include "decoder.h"
 #include "encoder.h"
 #include "overlay.h"
 
 static PyObject*
-pypopro_decoder_init(PyObject *self, PyObject *args)
+py_pypopro_decoder_init(PyObject *self, PyObject *args)
 {
     const char *filename;
     if (!PyArg_ParseTuple(args, "s", &filename))
@@ -16,7 +16,7 @@ pypopro_decoder_init(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_decoder_read(PyObject *self, PyObject *args)
+py_pypopro_decoder_read(PyObject *self, PyObject *args)
 {
     long long decoder_long;
     long long pts;
@@ -31,7 +31,7 @@ pypopro_decoder_read(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_decoder_close(PyObject *self, PyObject *args)
+py_pypopro_decoder_close(PyObject *self, PyObject *args)
 {
     long long decoder_long;
     if (!PyArg_ParseTuple(args, "L", &decoder_long))
@@ -45,7 +45,7 @@ pypopro_decoder_close(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_encoder_init(PyObject *self, PyObject *args)
+py_pypopro_encoder_init(PyObject *self, PyObject *args)
 {
     const char *filename;
     if (!PyArg_ParseTuple(args, "s", &filename))
@@ -57,7 +57,7 @@ pypopro_encoder_init(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_encoder_read(PyObject *self, PyObject *args)
+py_pypopro_encoder_add_frame(PyObject *self, PyObject *args)
 {
     long long encoder_long;
     long long frame_long;
@@ -65,8 +65,8 @@ pypopro_encoder_read(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "L:L", &encoder_long, &frame_long, &pts))
         return NULL;
 
-    PypoproDecoder *decoder = (PypoproDecoder *)(intptr_t) decoder_long;
-    AVFrame *frame = (AVFrame *)(intptr_t) frame;
+    PypoproEncoder *encoder = (PypoproEncoder *)(intptr_t) encoder_long;
+    AVFrame *frame = (AVFrame *)(intptr_t) frame_long;
 
     pypopro_encoder_add_frame(encoder, frame, (int64_t) pts);
 
@@ -77,7 +77,7 @@ pypopro_encoder_read(PyObject *self, PyObject *args)
 
 
 static PyObject*
-pypopro_encoder_close(PyObject *self, PyObject *args)
+py_pypopro_encoder_close(PyObject *self, PyObject *args)
 {
     long long encoder_long;
     if (!PyArg_ParseTuple(args, "L", &encoder_long))
@@ -91,7 +91,7 @@ pypopro_encoder_close(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_overlayer_init(PyObject *self, PyObject *args)
+py_pypopro_overlayer_init(PyObject *self, PyObject *args)
 {
     const char *filename;
     if (!PyArg_ParseTuple(args, "s", &filename))
@@ -103,14 +103,14 @@ pypopro_overlayer_init(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_overlayer_overlay(PyObject *self, PyObject *args)
+py_pypopro_overlayer_overlay(PyObject *self, PyObject *args)
 {
     long long overlayer_long;
-    PyObject *py_frames;
-    PyObject *py_widths;
-    PyObject *py_heights;
-    PyObject *py_posX;
-    PyObject *py_posY;
+    PyObject *py_frames = NULL;
+    PyObject *py_widths = NULL;
+    PyObject *py_heights = NULL;
+    PyObject *py_posX = NULL;
+    PyObject *py_posY = NULL;
 
     if (!PyArg_ParseTuple(args, "LO!O!O!O!O!",
                           &overlayer_long,
@@ -123,11 +123,11 @@ pypopro_overlayer_overlay(PyObject *self, PyObject *args)
 
     PypoproOverlayer *overlayer = (PypoproOverlayer *)(intptr_t) overlayer_long;
 
-    PyObject o;
-    int num_frames = PyList_size(py_frames);
+    PyObject *o;
+    int num_frames = PyList_Size(py_frames);
     //TODO: check that lists have the same length
     
-    AVFrame **frames = malloc(num_frame * sizeof(AVFrame*));
+    AVFrame **frames = malloc(num_frames * sizeof(AVFrame*));
     int widths[num_frames];
     int heights[num_frames];
     int posX[num_frames];
@@ -135,19 +135,19 @@ pypopro_overlayer_overlay(PyObject *self, PyObject *args)
     for (int i = 0; i < num_frames; i++)
     {
         o = PyList_GetItem(py_frames, i);
-        frames[i] = (intptr_t) PyInt_AsLong(o);
+        frames[i] = (AVFrame *)(intptr_t) PyLong_AsLong(o);
 
         o = PyList_GetItem(py_widths, i);
-        widths[i] = (intptr_t) PyInt_AsInt(o);
+        widths[i] = (int) PyLong_AsLong(o);
 
         o = PyList_GetItem(py_heights, i);
-        heights[i] = (intptr_t) PyInt_AsInt(o);
+        heights[i] = (int) PyLong_AsLong(o);
 
         o = PyList_GetItem(py_posX, i);
-        posX[i] = (intptr_t) PyInt_AsInt(o);
+        posX[i] = (int) PyLong_AsLong(o);
 
         o = PyList_GetItem(py_posY, i);
-        posY[i] = (intptr_t) PyInt_AsInt(o);
+        posY[i] = (int) PyLong_AsLong(o);
     }
 
 
@@ -163,7 +163,7 @@ pypopro_overlayer_overlay(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-pypopro_overlayer_close(PyObject *self, PyObject *args)
+py_pypopro_overlayer_close(PyObject *self, PyObject *args)
 {
     long long overlayer_long;
     if (!PyArg_ParseTuple(args, "L", &overlayer_long))
@@ -177,3 +177,33 @@ pypopro_overlayer_close(PyObject *self, PyObject *args)
 }
 
 
+static PyMethodDef
+PypoproMethods[] = {
+    {"decoder_init",  py_pypopro_decoder_init, METH_VARARGS, "Initialize a decoder."},
+    {"decoder_read",  py_pypopro_decoder_read, METH_VARARGS, "Read a frame at a given PTS."},
+    {"decoder_close",  py_pypopro_decoder_close, METH_VARARGS, "Close a decoder."},
+    {"endoder_init",  py_pypopro_encoder_init, METH_VARARGS, "Initialize an encoder."},
+    {"endoder_add_frame",  py_pypopro_encoder_add_frame, METH_VARARGS, "Add a frame to an encoder."},
+    {"endoder_close",  py_pypopro_encoder_close, METH_VARARGS, "Close an encoder."},
+    {"overlayer_init",  py_pypopro_overlayer_init, METH_VARARGS, "Initialize an overlayer."},
+    {"overlayer_overlay",  py_pypopro_overlayer_overlay, METH_VARARGS, "Overlay frames with given dimensions and positions."},
+    {"overlayer_close",  py_pypopro_overlayer_close, METH_VARARGS, "Close an overlayer."},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+
+static struct PyModuleDef
+pypopromodule = {
+   PyModuleDef_HEAD_INIT,
+   "pypopro",   /* name of module */
+   NULL, /* module documentation, may be NULL */
+   -1,       /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+   PypoproMethods
+};
+
+PyMODINIT_FUNC
+PyInit_pypopro(void)
+{
+    return PyModule_Create(&pypopromodule);
+}
