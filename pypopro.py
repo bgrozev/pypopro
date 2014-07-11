@@ -41,13 +41,28 @@ def main():
     #read metadata
     events = json.load(open(input_dir + config['metadataFilename']))
 
-    do_audio(events.get('audio'))
+    #get this before we change the events' instants
+    audio_start = events.get('audio')[0]['instant']
+
+    audio_file = do_audio(events.get('audio'))
     add_timing('Audio complete')
 
-    do_video(events.get('video'))
+    #get this before we change the events' instants
+    video_start = events.get('audio')[0]['instant']
+
+    video_file = do_video(events.get('video'))
     add_timing('Video complete')
 
     #merge audio and video
+    audio_offset, video_offset = 0, 0
+    if (audio_start > video_start):
+        audio_offset = audio_start - video_start
+    else:
+        video_offset = video_start - audio_start
+    merge(audio_file, audio_offset,
+          video_file, video_offset,
+          output_dir + config['outputFilename'])
+    add_timing('Merge audio and video')
 
     print()
     for s in timing_strings:
@@ -64,11 +79,14 @@ def do_audio(events):
                      e['instant'])
         mix_command += ' {}.wav'.format(
             output_dir + 'audio_tmp/' + e['filename'])
-    mix_command += ' {}out.wav'.format(output_dir)
+    filename = output_dir + 'out.wav'
+    mix_command += ' ' + filename
     add_timing('Audio padded')
     os.system(mix_command)
     add_timing('Audio mixed')
     os.system('rm -rf {}audio_tmp'.format(output_dir))
+
+    return filename
 
 
 def do_video(events):
@@ -81,7 +99,8 @@ def do_video(events):
     participants = Participants.Participants(config, input_dir)
 
     overlayer = pypopro.overlayer_init()
-    encoder = pypopro.encoder_init(output_dir + config['outputFilename'])
+    filename = output_dir + config['outputFilename'] + '.ivf'
+    encoder = pypopro.encoder_init(filename)
 
     for ms in range(0, last_instant, config['frameDuration']):
         #read events in (0, ms] and update participants
@@ -102,14 +121,26 @@ def do_video(events):
         #                                                           active))
 
         #read frames for all participants and overlay them
+        f, w, h, x, y = participants.get_frames(ms)
+        print("overlay: " + str(overlayer) + ' ' + str(f) + "; " + str(
+            w) + "; " + str(h) + '; ' + str(x) + '; ' + str(y))
         frame = pypopro.overlayer_overlay(overlayer,
-                                          *participants.get_frames(ms))
+                                          f, w, h, x, y)
 
         #encode the frame and write it to disk
-        pypopro.encoder_add_frame(encoder, frame)
+        print('encode: ' + str(encoder) + " " + str(frame) + " " + str(ms))
+        pypopro.encoder_add_frame(encoder, frame, ms)
 
     pypopro.encoder_close(encoder)
     pypopro.overlayer_close(overlayer)
+
+    return filename
+
+
+def merge(audio_file, audio_offset, video_file, video_offset, output_file):
+    os.system(
+        'ffmpeg -y -itsoffset {} -i {} -itsoffset {} -i {} -vcodec copy {}'.format(
+            audio_offset, audio_file, video_offset, video_file, output_file))
 
 
 def preprocess_video_events(events):

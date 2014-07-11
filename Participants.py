@@ -30,7 +30,7 @@ class Participants:
             participant = self.find_participant(event['ssrc'])
             if participant:
                 self.participants.remove(participant)
-                pypopro.decoder_close(participant.decoder)
+                #pypopro.decoder_close(participant.decoder)
                 if self.active == participant:
                     self.active = None
                     if self.participants:
@@ -50,6 +50,7 @@ class Participants:
         pos_y = []
 
         #active
+        print("read from decoder (active) at {}".format(ms-self.active.start))
         frames.append(pypopro.decoder_read(self.active.decoder,
                                            ms - self.active.start))
         widths.append(self.config['outputWidth'])
@@ -63,6 +64,7 @@ class Participants:
             if p == self.active:
                 continue
 
+            print("read from decoder (non-active) at {}".format(ms-p.start))
             frames.append(pypopro.decoder_read(p.decoder,
                                                ms - p.start))
             widths.append(SMALL_VIDEO_WIDTH)
