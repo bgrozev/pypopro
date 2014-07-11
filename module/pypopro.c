@@ -62,7 +62,7 @@ py_pypopro_encoder_add_frame(PyObject *self, PyObject *args)
     long long encoder_long;
     long long frame_long;
     long long pts;
-    if (!PyArg_ParseTuple(args, "L:L", &encoder_long, &frame_long, &pts))
+    if (!PyArg_ParseTuple(args, "LLL", &encoder_long, &frame_long, &pts))
         return NULL;
 
     PypoproEncoder *encoder = (PypoproEncoder *)(intptr_t) encoder_long;
@@ -102,28 +102,33 @@ static PyObject*
 py_pypopro_overlayer_overlay(PyObject *self, PyObject *args)
 {
     long long overlayer_long;
-    PyObject *py_frames = NULL;
-    PyObject *py_widths = NULL;
-    PyObject *py_heights = NULL;
-    PyObject *py_posX = NULL;
-    PyObject *py_posY = NULL;
+    PyObject *py_frames;
+    PyObject *py_widths;
+    PyObject *py_heights;
+    PyObject *py_posX;
+    PyObject *py_posY;
 
     if (!PyArg_ParseTuple(args, "LO!O!O!O!O!",
                           &overlayer_long,
-                          &PyList_Type, py_frames,
-                          &PyList_Type, py_widths,
-                          &PyList_Type, py_heights,
-                          &PyList_Type, py_posX,
-                          &PyList_Type, py_posY))
+                          &PyList_Type, &py_frames,
+                          &PyList_Type, &py_widths,
+                          &PyList_Type, &py_heights,
+                          &PyList_Type, &py_posX,
+                          &PyList_Type, &py_posY))
+    {
         return NULL;
+    }
+
 
     PypoproOverlayer *overlayer = (PypoproOverlayer *)(intptr_t) overlayer_long;
+    printf("overlayer-> %ld\n", (intptr_t) overlayer);
 
     PyObject *o;
     int num_frames = PyList_Size(py_frames);
+    printf("overlay %d frames\n", num_frames);
     //TODO: check that lists have the same length
     
-    AVFrame **frames = malloc(num_frames * sizeof(AVFrame*));
+    AVFrame *frames[num_frames];
     int widths[num_frames];
     int heights[num_frames];
     int posX[num_frames];
@@ -144,6 +149,8 @@ py_pypopro_overlayer_overlay(PyObject *self, PyObject *args)
 
         o = PyList_GetItem(py_posY, i);
         posY[i] = (int) PyLong_AsLong(o);
+
+        printf("C: overlay %ld %d %d %d %d\n", frames[i], widths[i], heights[i], posX[i], posY[i]);
     }
 
 
