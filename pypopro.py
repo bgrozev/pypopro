@@ -48,7 +48,7 @@ def main():
     add_timing('Audio complete')
 
     #get this before we change the events' instants
-    video_start = events.get('audio')[0]['instant']
+    video_start = events.get('video')[0]['instant']
 
     video_file = do_video(events.get('video'))
     add_timing('Video complete')
@@ -59,6 +59,7 @@ def main():
         audio_offset = audio_start - video_start
     else:
         video_offset = video_start - audio_start
+    print('audio start ', audio_start, ' video start ', video_start)
     merge(audio_file, audio_offset,
           video_file, video_offset,
           output_dir + config['outputFilename'])
@@ -74,7 +75,14 @@ def do_audio(events):
     os.system('mkdir -p {}audio_tmp'.format(output_dir))
     mix_command = 'sox --combine mix-power'
     for e in events:
-        decode_audio(input_dir + e['filename'],
+        #TODO: check if file exists and it's min length
+        in_file = input_dir + e['filename'];
+        if not os.path.isfile(in_file) or os.stat(in_file).st_size < 10000:
+            print('Skipping audio file ', in_file,
+                  ' because it does not exist or is too short.')
+            continue
+
+        decode_audio(in_file,
                      output_dir + 'audio_tmp/' + e['filename'] + '.wav',
                      e['instant'])
         mix_command += ' {}.wav'.format(
@@ -92,6 +100,11 @@ def do_audio(events):
 def do_video(events):
     events = preprocess_video_events(events)
     add_timing('Video events pre-processed (extracted durations)')
+
+    if debug:
+        print('Pre-processed video events:')
+        for e in events:
+            print(e)
 
     last_instant = events[-1]['instant']
     index = -1
@@ -120,16 +133,25 @@ def do_video(events):
         #            print('ms={} participants={} active={}'.format(ms, participants,
         #                                                           active))
 
+        if not participants.active:
+            print('no active speaker left, ending at ms=', ms)
+            participants.print_stats()
+            break
+
         #read frames for all participants and overlay them
         f, w, h, x, y = participants.get_frames(ms)
         print("overlay: " + str(overlayer) + ' ' + str(f) + "; " + str(
             w) + "; " + str(h) + '; ' + str(x) + '; ' + str(y))
-        frame = pypopro.overlayer_overlay(overlayer,
-                                          f, w, h, x, y)
+
+        #overlay currently disabled, just use the 'active' frame
+        #frame = pypopro.overlayer_overlay(overlayer,
+        #                                  f, w, h, x, y)
+        frame = f[0]
 
         #encode the frame and write it to disk
         print('encode: ' + str(encoder) + " " + str(frame) + " " + str(ms))
         pypopro.encoder_add_frame(encoder, frame, ms)
+        participants.frames_encoded += 1
 
     pypopro.encoder_close(encoder)
     pypopro.overlayer_close(overlayer)
@@ -138,6 +160,9 @@ def do_video(events):
 
 
 def merge(audio_file, audio_offset, video_file, video_offset, output_file):
+    print(
+        'Merging {}({}) and {}({})'.format(audio_file, audio_offset, video_file,
+                                           video_offset))
     os.system(
         'ffmpeg -y -itsoffset {} -i {} -itsoffset {} -i {} -vcodec copy {}'.format(
             audio_offset, audio_file, video_offset, video_file, output_file))
@@ -151,6 +176,8 @@ def preprocess_video_events(events):
         else:
             break
 
+    events = [i for i in events if i['type'] != 'RECORDING_ENDED']
+
     #insert RECORDING_ENDED events
     #TODO: cleaner syntax for this?
     ended = []
@@ -163,6 +190,8 @@ def preprocess_video_events(events):
                      instant=event['instant'] + get_duration(
                          input_dir + event['filename']))
             ended.append(e)
+
+    events += ended
 
     events.sort(key=lambda x: x['instant'])
 
@@ -188,7 +217,10 @@ def get_duration(filename):
     """
     proc = os.popen(
         'mkvinfo -s -v ' + filename + " | tail -n 1 | awk '{print $6;}'")
-    return int(proc.read())
+    return2 = int(proc.read())
+
+    print('duration {} {}'.format(filename, return2))
+    return return2
 
 
 def decode_audio(in_name, out_name, padding):
