@@ -56,11 +56,14 @@ PypoproDecoder *pypopro_decoder_init(const char *filename)
     decoder->last_read_pts = -1;
     decoder->currentPacket = NULL;
 
+    printf("pypopro decoder initialized: %s\n", filename);
     return decoder;
 }
 
 void pypopro_decoder_close(PypoproDecoder *decoder)
 {
+    printf("pypopro closing decoder %ld\n", (intptr_t) decoder);
+    fflush(stdout);
     avformat_close_input( &(decoder->formatCtx) );
     avformat_free_context(decoder->formatCtx);
     avcodec_close(decoder->codecCtx);
@@ -90,7 +93,7 @@ int advance(PypoproDecoder *decoder)
     }
 
     //decode the current packet
-    printf("Decoding packet with pts=%lld\n", decoder->currentPacket->pts);
+    //printf("Decoding packet with pts=%lld\n", decoder->currentPacket->pts);
     int frameFinished = 0;
     avcodec_decode_video2(decoder->codecCtx,
                           decoder->frame,
@@ -112,7 +115,7 @@ AVFrame *pypopro_decoder_read(PypoproDecoder *decoder, int64_t pts)
     while (decoder->currentPacket == NULL
             || decoder->peekPacket->pts <= pts)
     {
-        if (!advance(decoder))
+        if (advance(decoder) == -1)
         {
             printf("Failed to advance.\n");
             return NULL;
@@ -121,6 +124,6 @@ AVFrame *pypopro_decoder_read(PypoproDecoder *decoder, int64_t pts)
 
     
     printf("Read %lld, returning pts=%lld\n", pts, decoder->currentPacket->pts);
-    printf("returing width=%d height=%d frame_pts=%lld frame_dts=%lld\n", decoder->frame->width, decoder->frame->height, decoder->frame->pkt_pts, decoder->frame->pkt_dts);
+    printf("returning width=%d height=%d frame_pts=%lld frame_dts=%lld\n", decoder->frame->width, decoder->frame->height, decoder->frame->pkt_pts, decoder->frame->pkt_dts);
     return decoder->frame;
 }

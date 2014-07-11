@@ -2,6 +2,7 @@
 #include "decoder.h"
 #include "encoder.h"
 #include "overlay.h"
+#include "scale.h"
 
 static PyObject*
 py_pypopro_decoder_init(PyObject *self, PyObject *args)
@@ -74,8 +75,6 @@ py_pypopro_encoder_add_frame(PyObject *self, PyObject *args)
 }
 
 
-
-
 static PyObject*
 py_pypopro_encoder_close(PyObject *self, PyObject *args)
 {
@@ -89,6 +88,52 @@ py_pypopro_encoder_close(PyObject *self, PyObject *args)
 
     Py_RETURN_NONE;
 }
+
+static PyObject*
+py_pypopro_scaler_init(PyObject *self, PyObject *args)
+{
+    long long in_w, in_h, out_w, out_h;
+    if (!PyArg_ParseTuple(args, "LLLL", &in_w, &in_h, &out_w, &out_h))
+        return NULL;
+
+    PypoproScaler *scaler = pypopro_scaler_init((int) in_w,
+                                                (int) in_h,
+                                                (int) out_w,
+                                                (int) out_h);
+
+    return Py_BuildValue("l", (intptr_t) scaler);
+}
+
+static PyObject*
+py_pypopro_scaler_scale(PyObject *self, PyObject *args)
+{
+    long long frame_long, scaler_long;
+    if (!PyArg_ParseTuple(args, "LL", &scaler_long, &frame_long))
+        return NULL;
+
+    PypoproScaler *scaler = (PypoproScaler *)(intptr_t) scaler_long;
+    AVFrame *frame = (AVFrame *)(intptr_t) frame_long;
+
+    AVFrame * f = pypopro_scaler_scale(scaler, frame);
+
+    return Py_BuildValue("l", (intptr_t) f);
+}
+
+static PyObject*
+py_pypopro_scaler_close(PyObject *self, PyObject *args)
+{
+    long long scaler_long;
+    if (!PyArg_ParseTuple(args, "L", &scaler_long))
+        return NULL;
+
+    PypoproScaler *scaler = (PypoproScaler *)(intptr_t) scaler_long;
+
+    pypopro_scaler_close(scaler);
+
+    Py_RETURN_NONE;
+}
+
+
 
 static PyObject*
 py_pypopro_overlayer_init(PyObject *self, PyObject *args)
@@ -179,6 +224,18 @@ py_pypopro_overlayer_close(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject*
+py_pypopro_get_dimensions(PyObject *self, PyObject *args)
+{
+    long long frame_long;
+    if (!PyArg_ParseTuple(args, "L", &frame_long))
+        return NULL;
+
+    AVFrame *frame = (AVFrame *)(intptr_t) frame_long;
+
+    return Py_BuildValue("ll", frame->width, frame->height);
+}
+
 
 static PyMethodDef
 PypoproMethods[] = {
@@ -188,9 +245,13 @@ PypoproMethods[] = {
     {"encoder_init",  py_pypopro_encoder_init, METH_VARARGS, "Initialize an encoder."},
     {"encoder_add_frame",  py_pypopro_encoder_add_frame, METH_VARARGS, "Add a frame to an encoder."},
     {"encoder_close",  py_pypopro_encoder_close, METH_VARARGS, "Close an encoder."},
+    {"scaler_init",  py_pypopro_scaler_init, METH_VARARGS, "Initialize a scaler."},
+    {"scaler_scale",  py_pypopro_scaler_scale, METH_VARARGS, "Scale a frame."},
+    {"scaler_close",  py_pypopro_scaler_close, METH_VARARGS, "Close a scaler."},
     {"overlayer_init",  py_pypopro_overlayer_init, METH_VARARGS, "Initialize an overlayer."},
     {"overlayer_overlay",  py_pypopro_overlayer_overlay, METH_VARARGS, "Overlay frames with given dimensions and positions."},
     {"overlayer_close",  py_pypopro_overlayer_close, METH_VARARGS, "Close an overlayer."},
+    {"get_dimensions", py_pypopro_get_dimensions, METH_VARARGS, "Get the width and height of an ffmpeg AVFrame."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
