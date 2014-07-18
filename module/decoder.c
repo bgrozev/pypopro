@@ -123,7 +123,7 @@ AVFrame *pypopro_decoder_read(PypoproDecoder *decoder, int64_t pts)
     }
 
     
-    printf("Read %lld, returning pts=%lld\n", pts, decoder->currentPacket->pts);
-    printf("returning width=%d height=%d frame_pts=%lld frame_dts=%lld\n", decoder->frame->width, decoder->frame->height, decoder->frame->pkt_pts, decoder->frame->pkt_dts);
+    //printf("Read %lld, returning pts=%lld\n", pts, decoder->currentPacket->pts);
+    //printf("returning width=%d height=%d frame_pts=%lld frame_dts=%lld\n", decoder->frame->width, decoder->frame->height, decoder->frame->pkt_pts, decoder->frame->pkt_dts);
     return decoder->frame;
 }

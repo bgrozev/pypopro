@@ -10,7 +10,7 @@ import Participants
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Usage: {} <input_dir> <output_dir>".format(sys.argv[0]))
         return
 
@@ -41,29 +41,33 @@ def main():
     #read metadata
     events = json.load(open(input_dir + config['metadataFilename']))
 
-    #get this before we change the events' instants
-    audio_start = events.get('audio')[0]['instant']
+    if config['processAudio']:
+        #get this before we change the events' instants
+        audio_start = events.get('audio')[0]['instant']
 
-    audio_file = do_audio(events.get('audio'))
-    add_timing('Audio complete')
+        audio_file = do_audio(events.get('audio'))
+        add_timing('Audio complete')
 
-    #get this before we change the events' instants
-    video_start = events.get('video')[0]['instant']
+    if config['processVideo']:
+        #get this before we change the events' instants
+        video_start = events.get('video')[0]['instant']
 
-    video_file = do_video(events.get('video'))
-    add_timing('Video complete')
+        video_file = do_video(events.get('video'))
+        add_timing('Video complete')
 
-    #merge audio and video
-    audio_offset, video_offset = 0, 0
-    if (audio_start > video_start):
-        audio_offset = audio_start - video_start
-    else:
-        video_offset = video_start - audio_start
-    print('audio start ', audio_start, ' video start ', video_start)
-    merge(audio_file, audio_offset,
-          video_file, video_offset,
-          output_dir + config['outputFilename'])
-    add_timing('Merge audio and video')
+    if config['processAudio'] and config['processVideo']:
+        #merge audio and video
+        audio_offset, video_offset = 0, 0
+        if (audio_start > video_start):
+            audio_offset = audio_start - video_start
+        else:
+            video_offset = video_start - audio_start
+        print('audio start ', audio_start, ' video start ', video_start)
+        print('audio offset ', audio_offset, ' video offset ', video_offset)
+        merge(audio_file, audio_offset,
+              video_file, video_offset,
+              output_dir + config['outputFilename'])
+        add_timing('Merge audio and video')
 
     print()
     for s in timing_strings:
@@ -78,8 +82,8 @@ def do_audio(events):
         #TODO: check if file exists and it's min length
         in_file = input_dir + e['filename'];
         if not os.path.isfile(in_file) or os.stat(in_file).st_size < 10000:
-            print('Skipping audio file ', in_file,
-                  ' because it does not exist or is too short.')
+            print('Skipping audio file', in_file,
+                  'because it does not exist or is too short.')
             continue
 
         decode_audio(in_file,
@@ -115,13 +119,14 @@ def do_video(events):
     filename = output_dir + config['outputFilename'] + '.ivf'
     encoder = pypopro.encoder_init(filename)
 
+    print()
     for ms in range(0, last_instant, config['frameDuration']):
         #read events in (0, ms] and update participants
         added = False
         while events[index + 1]['instant'] <= ms:
             event = events[index + 1]
             if debug:
-                print('Event {} at {} handled at ms={}'.format(event['type'],
+                print('\nEvent {} at {} handled at ms={}'.format(event['type'],
                                                                event['instant'],
                                                                ms))
             participants.add_event(event)
@@ -134,14 +139,16 @@ def do_video(events):
         #                                                           active))
 
         if not participants.active:
-            print('no active speaker left, ending at ms=', ms)
+            print('\nno active speaker left, ending at ms=', ms)
             participants.print_stats()
+            break
+        if 0 < config['maxVideoDurationMs'] < ms:
             break
 
         #read frames for all participants and overlay them
         f, w, h, x, y = participants.get_frames(ms)
-        print("overlay: " + str(overlayer) + ' ' + str(f) + "; " + str(
-            w) + "; " + str(h) + '; ' + str(x) + '; ' + str(y))
+        #print("overlay: " + str(overlayer) + ' ' + str(f) + "; " + str(
+        #    w) + "; " + str(h) + '; ' + str(x) + '; ' + str(y))
 
         #overlay currently disabled, just use the 'active' frame
         #frame = pypopro.overlayer_overlay(overlayer,
@@ -149,10 +156,14 @@ def do_video(events):
         frame = f[0]
 
         #encode the frame and write it to disk
-        print('encode: ' + str(encoder) + " " + str(frame) + " " + str(ms))
+        #print('encode: ' + str(encoder) + " " + str(frame) + " " + str(ms))
         pypopro.encoder_add_frame(encoder, frame, ms)
         participants.frames_encoded += 1
+        print('\rProcessing {} / {}ms'.format(str(ms).zfill(len(str(last_instant))),
+                                              last_instant),
+              end='')
 
+    participants.print_stats()
     pypopro.encoder_close(encoder)
     pypopro.overlayer_close(overlayer)
 
@@ -258,7 +269,6 @@ def parse_bool(v):
     return str(v).lower() in ("yes", "true", "t", "1")
 
 
-#TODO stats to save: num frames, duration, time
 last_time = int(round(time.time() * 1000))
 first_time = last_time
 timing_strings = []

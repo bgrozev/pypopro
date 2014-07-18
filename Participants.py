@@ -68,16 +68,16 @@ class Participants:
         pos_y = []
 
         #active
-        print("read from decoder (active) at {}".format(ms-self.active.start))
+        #print("read from decoder (active) at {}".format(ms-self.active.start))
         frame = pypopro.decoder_read(self.active.decoder,
                                      ms - self.active.start)
-        print("read active frame: " + str(frame))
+        #print("read active frame: " + str(frame))
         self.frames_decoded += 1
 
         out_w = self.config['outputWidth']
         out_h = self.config['outputHeight']
         frame = self.scale(frame, out_w, out_h)
-        print("scaled active frame: " + str(frame))
+        #print("scaled active frame: " + str(frame))
 
         frames.append(frame)
         widths.append(out_w)
@@ -92,11 +92,11 @@ class Participants:
             if p == self.active:
                 continue
 
-            print("read from decoder (non-active) at {}".format(ms-p.start))
-            frame = pypopro.decoder_read(p.decoder,
-                                         ms - p.start)
+            #print("read from decoder (non-active) at {}".format(ms-p.start))
+            #frame = pypopro.decoder_read(p.decoder,
+            #                             ms - p.start)
             self.frames_decoded += 1
-            frame = self.scale(frame, SMALL_VIDEO_WIDTH, SMALL_VIDEO_HEIGHT)
+            #frame = self.scale(frame, SMALL_VIDEO_WIDTH, SMALL_VIDEO_HEIGHT)
 
             frames.append(frame)
             widths.append(SMALL_VIDEO_WIDTH)
@@ -110,11 +110,11 @@ class Participants:
 
     def scale(self, frame, out_w, out_h):
         in_w, in_h = pypopro.get_dimensions(frame)
-        print('dims: '+str(in_w)+' '+str(in_h))
+        #print('dims: '+str(in_w)+' '+str(in_h))
 
         if (in_w, in_h) != (out_w, out_h):
             scaler = self.get_scaler(in_w, in_h, out_w, out_h)
-            print('scaler: '+str(scaler))
+            #print('scaler: '+str(scaler))
             frame = pypopro.scaler_scale(scaler, frame)
             self.frames_scaled += 1
 

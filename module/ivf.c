@@ -16,6 +16,7 @@ static void mem_put_le32(char *mem, unsigned int val)
 
 void write_ivf_header(FILE *file, int w, int h)
 {
+    printf("write ifv header\n");
     char header[32];
 
     header[0] = 'D';
@@ -24,11 +25,11 @@ void write_ivf_header(FILE *file, int w, int h)
     header[3] = 'F';
     mem_put_le16(header + 4, 0);                     // version
     mem_put_le16(header + 6, 32);                    // header size
-    mem_put_le32(header + 8, 0x30385056);                // fourcc
+    mem_put_le32(header + 8, 0x30385056);                // fourcc ('VP80')
     mem_put_le16(header + 12, w);             // width
     mem_put_le16(header + 14, h);             // height
-    mem_put_le32(header + 16, 90000);  // rate
-    mem_put_le32(header + 20, 16777216);  // scale
+    mem_put_le32(header + 16, 1000);  // rate
+    mem_put_le32(header + 20, 1);  // scale
     mem_put_le32(header + 24, 0);            // length
     mem_put_le32(header + 28, 0);                    // unused
 

@@ -4,5 +4,8 @@
     "outputFramerate" : 25,
     "outputFilename" : "out.webm",
     "metadataFilename" : "metadata.json",
+    "processAudio" : true,
+    "processVideo" : false,
+    "maxVideoDurationMs" : 90000,
     "debug" : "true"
 }

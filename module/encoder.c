@@ -1,7 +1,7 @@
 #include "encoder.h"
+#include "ivf.h"
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
-#include "ivf.h"
 #include "pypopro-constants.h"
 
 PypoproEncoder *pypopro_encoder_init(const char *filename)
@@ -27,6 +27,8 @@ PypoproEncoder *pypopro_encoder_init(const char *filename)
     encoder->codecCtx->height = OUT_HEIGHT;
     encoder->codecCtx->time_base= (AVRational){1,25};
     encoder->codecCtx->pix_fmt = PIX_FMT_YUV420P;
+
+    encoder->codecCtx->thread_count = THREAD_COUNT;
 
     if (avcodec_open2(encoder->codecCtx, encoder->codec, NULL) < 0)
     {
@@ -62,12 +64,12 @@ void pypopro_encoder_close(PypoproEncoder *encoder)
 
 void pypopro_encoder_add_frame(PypoproEncoder *encoder, AVFrame *frame, int64_t pts)
 {
-    printf("encoder add_frame pts=%lld\n", pts);
+    //printf("encoder add_frame pts=%lld\n", pts);
     int out_size = avcodec_encode_video(encoder->codecCtx,
                                         encoder->buf,
                                         encoder->buf_size,
                                         frame);
-    printf("encoder encoded: pts=%lld, out_size=%d\n", pts, out_size);
+    //printf("encoder encoded: pts=%lld, out_size=%d\n", pts, out_size);
 
     write_ivf_frame_header(encoder->file, pts, out_size);
     fwrite(encoder->buf, 1, out_size, encoder->file);
